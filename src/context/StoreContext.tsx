@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { CartItem, HomepageSection, Product, ProductVariant, StorefrontData } from '../types.ts';
 import { trackEvent } from '../lib/tracker.ts';
+import { trackMetaEvent } from '../lib/metaPixel.ts';
 
 interface StoreContextValue {
   storefront: StorefrontData | null;
@@ -135,6 +136,13 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         sectionName: 'add_to_cart',
         productName: product.name,
       });
+      trackMetaEvent('AddToCart', {
+        content_name: product.name,
+        content_ids: [String(product.id)],
+        content_type: 'product',
+        currency,
+        value: unitPrice !== null ? Number((unitPrice * quantity).toFixed(2)) : undefined,
+      });
       setCart((prev) => {
         const existing = prev.find((i) => i.variantId === variant.id);
         if (existing) {
@@ -160,7 +168,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       });
       showToast(`Added ${product.name} (${variant.packaging_size}) to cart`);
     },
-    [getEffectivePrice, showToast]
+    [currency, getEffectivePrice, showToast]
   );
 
   const updateCartQty = useCallback((variantId: number, quantity: number) => {

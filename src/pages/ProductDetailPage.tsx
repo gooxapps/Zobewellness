@@ -4,10 +4,11 @@ import { Product } from '../types.ts';
 import { useStore } from '../context/StoreContext.tsx';
 import { Link } from '../lib/router.tsx';
 import { trackEvent } from '../lib/tracker.ts';
+import { trackMetaEvent } from '../lib/metaPixel.ts';
 import { ImageWithFallback } from '../components/ImageWithFallback.tsx';
 
 export function ProductDetailPage({ slug }: { slug: string }) {
-  const { storefront, formatMoney, getEffectivePrice, addToCart, setCartOpen } = useStore();
+  const { storefront, currency, formatMoney, getEffectivePrice, addToCart, setCartOpen } = useStore();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedVariantId, setSelectedVariantId] = useState<number>(0);
@@ -35,6 +36,15 @@ export function ProductDetailPage({ slug }: { slug: string }) {
           pagePath: `/product/${prod.slug}`,
           productName: prod.name,
         });
+        const firstPrice = firstPriced ? getEffectivePrice(firstPriced) : null;
+        trackMetaEvent('ViewContent', {
+          content_name: prod.name,
+          content_ids: [String(prod.id)],
+          content_category: prod.category_name,
+          content_type: 'product',
+          currency,
+          value: firstPrice !== null ? firstPrice : undefined,
+        });
       })
       .catch(() => {
         if (active) setProduct(null);
@@ -45,7 +55,7 @@ export function ProductDetailPage({ slug }: { slug: string }) {
     return () => {
       active = false;
     };
-  }, [slug]);
+  }, [slug, currency, getEffectivePrice]);
 
   if (loading) {
     return (

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Building2, MapPin, Package, Phone, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useStore } from '../context/StoreContext.tsx';
+import { trackMetaEvent } from '../lib/metaPixel.ts';
 
 export function BulkQuoteForm({ compact = false }: { compact?: boolean }) {
   const { storefront } = useStore();
@@ -49,6 +50,10 @@ export function BulkQuoteForm({ compact = false }: { compact?: boolean }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not submit quotation enquiry.');
+      trackMetaEvent('Lead', {
+        content_name: `Bulk Quote ${data.referenceCode}`,
+        content_category: productInterest,
+      });
       setSuccess({ referenceCode: data.referenceCode, message: data.message });
       setCompanyName('');
       setLocation('');

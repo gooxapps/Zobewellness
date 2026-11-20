@@ -484,6 +484,7 @@ async function seedInitialData(client: DbClient): Promise<void> {
       maintenance_message: 'We are updating our botanical inventory. Please contact us on WhatsApp for immediate orders.',
       seo_default_title: 'Zobowellness | Premium Grade A Hibiscus Leaves & Botanical Supplier',
       seo_default_description: 'Zobowellness supplies cleaned Grade A hibiscus leaves in bulk alongside herbs, botanical leaves, flowers, berries, seeds, and powders across Canada, UK, and USA.',
+      meta_pixel_id: '2129321331271351',
       social_facebook: '',
       social_instagram: '',
       social_youtube: '',
@@ -492,6 +493,17 @@ async function seedInitialData(client: DbClient): Promise<void> {
     };
     for (const [k, v] of Object.entries(defaults)) {
       await client.run('INSERT INTO global_settings (key, value) VALUES (?, ?)', [k, v]);
+    }
+  } else {
+    const existingPixel = await client.get<{ value: string }>(
+      'SELECT value FROM global_settings WHERE key = ?',
+      ['meta_pixel_id']
+    );
+    if (!existingPixel) {
+      await client.run('INSERT INTO global_settings (key, value) VALUES (?, ?)', [
+        'meta_pixel_id',
+        '2129321331271351',
+      ]);
     }
   }
 

@@ -718,6 +718,15 @@ export function AdminSettingsTab({
             className="w-full px-3 py-2 rounded-lg border border-neutral-300 text-sm"
           />
         </div>
+        <div>
+          <label className="block text-xs font-medium text-neutral-700 mb-1">Meta Pixel ID</label>
+          <input
+            type="text"
+            value={form.meta_pixel_id || '2129321331271351'}
+            onChange={(e) => setVal('meta_pixel_id', e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-neutral-300 text-sm font-mono"
+          />
+        </div>
       </div>
 
       <div className="pt-4 border-t border-neutral-200 space-y-3">

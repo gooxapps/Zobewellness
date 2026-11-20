@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Minus, Plus, Trash2, X, MessageCircle, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useStore } from '../context/StoreContext.tsx';
+import { trackMetaEvent } from '../lib/metaPixel.ts';
 import { ImageWithFallback } from './ImageWithFallback.tsx';
 
 export function CartDrawer() {
@@ -77,6 +78,11 @@ export function CartDrawer() {
     if (cart.length === 0) return;
 
     setSubmitting(true);
+    trackMetaEvent('InitiateCheckout', {
+      num_items: cart.reduce((sum, i) => sum + i.quantity, 0),
+      currency,
+      value: subtotal > 0 ? Number(subtotal.toFixed(2)) : undefined,
+    });
     try {
       const res = await fetch('/api/orders', {
         method: 'POST',
@@ -99,6 +105,12 @@ export function CartDrawer() {
       if (!res.ok) {
         throw new Error(data.error || 'Could not save order enquiry.');
       }
+
+      trackMetaEvent('Lead', {
+        content_name: `Order Enquiry ${data.orderNumber}`,
+        currency: data.currency || currency,
+        value: data.estimatedTotal > 0 ? Number(data.estimatedTotal) : undefined,
+      });
 
       setSubmittedOrder({
         orderNumber: data.orderNumber,

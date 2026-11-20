@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { StoreProvider, useStore } from './context/StoreContext.tsx';
 import { RouterProvider, useRouter, Link } from './lib/router.tsx';
 import { trackEvent } from './lib/tracker.ts';
+import { trackMetaPageView } from './lib/metaPixel.ts';
 import { Navbar } from './components/Navbar.tsx';
 import { Footer } from './components/Footer.tsx';
 import { CartDrawer } from './components/CartDrawer.tsx';
 import { MobileBottomNav } from './components/MobileBottomNav.tsx';
 import { OfflineIndicator } from './components/PWAInstallButton.tsx';
+import { WhatsAppFloatingButton } from './components/WhatsAppFloatingButton.tsx';
 import { HomePage } from './pages/HomePage.tsx';
 import { ShopPage } from './pages/ShopPage.tsx';
 import { ProductDetailPage } from './pages/ProductDetailPage.tsx';
@@ -23,12 +25,18 @@ function AppShell() {
   const { storefront, loading, error, toast } = useStore();
 
   const settings = storefront?.settings || {};
+  const isFirstRouteRef = useRef(true);
 
   useEffect(() => {
     if (!path.startsWith('/admin')) {
       trackEvent({ eventType: 'page_view', pagePath: path || '/' });
+      if (isFirstRouteRef.current) {
+        isFirstRouteRef.current = false;
+      } else {
+        trackMetaPageView(settings.meta_pixel_id);
+      }
     }
-  }, [path]);
+  }, [path, settings.meta_pixel_id]);
 
   useEffect(() => {
     if (settings.seo_default_title && !path.startsWith('/product/')) {
@@ -141,18 +149,27 @@ function AppShell() {
       <Footer />
       <MobileBottomNav />
       <CartDrawer />
+      <WhatsAppFloatingButton />
       <OfflineIndicator />
-      <ToastBanner toast={toast} />
+      <ToastBanner toast={toast} hasFloatingWidget />
     </div>
   );
 }
 
-function ToastBanner({ toast }: { toast: string | null }) {
+function ToastBanner({
+  toast,
+  hasFloatingWidget = false,
+}: {
+  toast: string | null;
+  hasFloatingWidget?: boolean;
+}) {
   if (!toast) return null;
   return (
     <div
       role="status"
-      className="fixed bottom-20 lg:bottom-5 right-4 sm:right-5 z-50 bg-[#1E1916] text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium border border-white/10"
+      className={`fixed right-4 sm:right-5 z-50 bg-[#1E1916] text-white px-4 py-3 rounded-xl shadow-lg text-sm font-medium border border-white/10 ${
+        hasFloatingWidget ? 'bottom-36 lg:bottom-24' : 'bottom-5'
+      }`}
     >
       {toast}
     </div>
